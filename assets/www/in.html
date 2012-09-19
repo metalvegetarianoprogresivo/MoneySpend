@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Spender</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" charset="utf-8" src="cordova-2.0.0.js"></script>
+		<link rel="stylesheet" href="themes/jquery.mobile-1.1.1.css" />
+  		<script src="jquery.min.js"></script> 
+  		<script src="jquery.mobile-1.1.1.js"></script>
+  		<script type="text/javascript">
+  			var html5rocks = {};
+  			html5rocks.webdb = {};
+
+  			html5rocks.webdb.db = null;
+
+  			html5rocks.webdb.open = function() {
+  				var dbSize = 5 * 1024 * 1024; // Son 5MB, obvio.
+  				html5rocks.webdb.db = openDatabase("cash", "1.0", "Cash Manager", dbSize);
+  			}
+
+  			html5rocks.webdb.onError = function(tx, e) {
+  				alert("Ocurrio un error: " + e.message);
+  			}
+
+  			html5rocks.webdb.onSuccess = function(tx, r) {
+          var db = html5rocks.webdb.db;
+          db.transaction(function(tx) {
+            tx.executeSql("UPDATE cash SET total=total+" + $('#monto').val() + " WHERE id=1", [], resetForm, html5rocks.webdb.onError);
+          });
+  			}
+
+  			html5rocks.webdb.addSalidas = function(monto) {
+  				var db = html5rocks.webdb.db;
+  				db.transaction(function(tx){
+  					var fecha = new Date();
+  					var textFecha = fecha.getDate() + "/" + getMonthText(fecha.getMonth()) + "/" + fecha.getFullYear();
+  					tx.executeSql("INSERT INTO entradas (monto, fecha) VALUES (?, ?)", 
+              [monto, textFecha], 
+              html5rocks.webdb.onSuccess(), 
+              html5rocks.webdb.onError);
+  				});
+  			}
+
+        function resetForm() {
+          $('#plus_form').each (function(){
+            this.reset();
+          });
+        }
+
+  			function init() {
+          html5rocks.webdb.open();
+          html5rocks.webdb.getTiposItems();
+        }
+
+        $(document).ready(function() {
+        	$('#plus_form').submit(function() {
+        		if ($('#monto').val() != "") {
+              if (!isNaN($('#monto').val())) {
+                html5rocks.webdb.addSalidas($('#monto').val());
+              }else{
+                alert("No escribio un numero.");
+              }
+        		}else{
+        			alert("No escribio el monto.");
+        		}
+						return false;
+					}); 
+        });
+
+        function getMonthText(n){
+  				var textomes = new Array(12);
+  				textomes[0] = "ENE";
+  				textomes[1] = "FEB";
+  				textomes[2] = "MAR";
+  				textomes[3] = "ABR";
+  				textomes[4] = "MAY";
+  				textomes[5] = "JUN";
+  				textomes[6] = "JUL";
+  				textomes[7] = "AGO";
+  				textomes[8] = "SEP";
+  				textomes[9] = "OCT";
+  				textomes[10] = "NOV";
+  				textomes[11] = "DIC";
+  				return textomes[n];
+  			}
+
+  		</script>
+	</head>
+	<body onLoad="init();">
+		<div data-role="page">
+			<div data-role="header" data-id="head1" data-position="fixed">
+				<h1>Ingreso</h1>
+        <a href="options.html" data-role="button" data-icon="gear" data-ajax="false">Opciones</a>
+				<a href="listEntrada.html" data-role="button" data-icon="star" data-ajax="false">Entradas</a>
+			</div>
+			<div data-role="content">
+				<h3>Agrega un nuevo ingreso:</h3>
+				<form method="get" id="plus_form">
+					<div data-role="fieldcontain" class="ui-hide-label">
+						<label for="monto">Monto:</label>
+						<input type="text" name="monto" id="monto" value="" placeholder="Monto"/>
+					</div>
+					<input type="submit" id="btnPlus" value="Go" />
+				</form>
+			</div><!-- /content -->
+			<div data-role="footer" data-id="head2" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a href="index.html" data-icon="home" data-ajax="false">Total</a></li>
+						<li><a href="spend.html" data-icon="minus" data-ajax="false">Gasto</a></li>
+						<li><a href="in.html" data-icon="plus" data-ajax="false">Ingreso</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Spender</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script type="text/javascript" charset="utf-8" src="cordova-2.0.0.js"></script>
+		<link rel="stylesheet" href="themes/jquery.mobile-1.1.1.css" />
+  		<script src="jquery.min.js"></script> 
+      <script type="text/javascript" src="currency.js"></script>
+  		<script src="jquery.mobile-1.1.1.js"></script>
+  		<script type="text/javascript">
+  			var html5rocks = {};
+  			html5rocks.webdb = {};
+
+  			html5rocks.webdb.db = null;
+
+  			html5rocks.webdb.open = function() {
+  				var dbSize = 5 * 1024 * 1024; // Son 5MB, obvio.
+  				html5rocks.webdb.db = openDatabase("cash", "1.0", "Cash Manager", dbSize);
+  			}
+
+  			html5rocks.webdb.onError = function(tx, e) {
+  				alert("Ocurrio un error: " + e.message);
+  			}
+
+  			html5rocks.webdb.getLoadItems = function() {
+          var db = html5rocks.webdb.db;
+          db.transaction(function(tx) {
+            tx.executeSql("SELECT salidas.id, salidas.monto, salidas.fecha, tipos.descripcion as tipo FROM salidas LEFT JOIN tipos ON salidas.tipo=tipos.id ORDER BY salidas.id DESC", [], loadItems, html5rocks.webdb.onError);
+          });
+        }
+
+        function loadItems(tx, rs) {
+          var contenido = "";
+        	for (var i = 0; i < rs.rows.length; i++) {
+            contenido = contenido + '<div class="ui-grid-b"><div class="ui-block-a">$ ' + currency(rs.rows.item(i).monto, 2, '.') + '</div><div class="ui-block-b">' + rs.rows.item(i).tipo + '</div><div class="ui-block-c">' + rs.rows.item(i).fecha + '</div></div><hr />';
+        	}
+          $('#salidasItems').html(contenido);
+
+        }
+
+  			function init() {
+          html5rocks.webdb.open();
+          html5rocks.webdb.getLoadItems();
+        }
+
+  		</script>
+	</head>
+	<body onLoad="init();">
+		<div data-role="page">
+			<div data-role="header" data-id="head1" data-position="fixed">
+				<h1>Gastos</h1>
+        <a href="spend.html" data-role="button" data-icon="back" data-ajax="false">Volver</a>
+			</div>
+			<div data-role="content">
+				<h3>Lista de gastos:</h3>
+				<div id="salidasItems"></div>
+			</div><!-- /content -->
+		</div>
+	</body>
+</html>

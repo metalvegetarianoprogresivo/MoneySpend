@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Spender</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script type="text/javascript" charset="utf-8" src="cordova-2.0.0.js"></script>
+		<link rel="stylesheet" href="themes/jquery.mobile-1.1.1.css" />
+  		<script src="jquery.min.js"></script>
+  		<script type="text/javascript" src="currency.js"></script>
+  		<script src="jquery.mobile-1.1.1.js"></script>
+  		<script type="text/javascript">
+  			var html5rocks = {};
+  			html5rocks.webdb = {};
+
+  			html5rocks.webdb.db = null;
+
+  			html5rocks.webdb.open = function() {
+  				var dbSize = 5 * 1024 * 1024; // Son 5MB, obvio.
+  				html5rocks.webdb.db = openDatabase("cash", "1.0", "Cash Manager", dbSize);
+  			}
+
+  			html5rocks.webdb.onError = function(tx, e) {
+  				alert("Ocurrio un error: " + e.message);
+  			}
+
+  			html5rocks.webdb.onSuccess = function(tx, r) {
+  				html5rocks.webdb.getAllItems();
+  			}
+
+	        html5rocks.webdb.getAllItems = function() {
+	          var db = html5rocks.webdb.db;
+	          db.transaction(function(tx) {
+	            tx.executeSql("SELECT * FROM cash LIMIT 1", [], loadItems, html5rocks.webdb.onError);
+	          });
+	        }
+
+	        html5rocks.webdb.updateConfig = function(nombre, saldo) {
+  				var db = html5rocks.webdb.db;
+  				db.transaction(function(tx){
+  					tx.executeSql("UPDATE cash SET usuario=?, total=? WHERE id=1", 
+		              [nombre, saldo], 
+		              html5rocks.webdb.onSuccess(), 
+		              html5rocks.webdb.onError);
+  				});
+  			}
+
+	        function loadItems(tx, rs) {
+	          	$('#nombre').val(rs.rows.item(0).usuario); 
+	          	$('#dinero').val(currency(rs.rows.item(0).total, 2, '.'));
+
+	        }
+
+	         $(document).ready(function() {
+	        	$('#formUpdate').submit(function() {
+	        		if ($('#nombre').val() != "") {
+	        			if ($('#dinero').val() != "") {
+	        				if (!isNaN($('#dinero').val())) {
+	        					html5rocks.webdb.updateConfig($('#nombre').val(), $('#dinero').val());
+	        				}else{
+								alert("No escribio un numero.");
+	        				}
+	        			}else{
+	        				alert("No escribio el saldo.");
+	        			}
+	        		}else{
+	        			alert("No escribio el nombre.");
+	        		}
+					return false;
+				}); 
+	        });
+
+	        function init() {
+	          html5rocks.webdb.open();
+	          html5rocks.webdb.getAllItems();
+	        }
+  		</script>
+	</head>
+	<body onLoad="init();">
+		<div data-role="page">
+			<div data-role="header" data-id="head1" data-position="fixed">
+				<h1>Opciones</h1>
+				<a href="index.html" data-role="button" data-icon="back" data-ajax="false">Volver</a>
+			</div>
+			<div data-role="content">	
+				<form id="formUpdate">
+					<div data-role="fieldcontain" class="ui-hide-label">
+						<label for="nombre">Nombre del usuario.</label>
+						<input type="text" name="nombre" id="nombre" value="" placeholder="Nombre del usuario."/>
+						<label for="dinero">Mi capital actual.</label>
+						<input type="text" name="dinero" id="dinero" value="" placeholder="Mi capital actual."/>
+					</div>
+					<input type="submit" id="btnMinus" value="Actualizar" />
+				</form>	
+			</div><!-- /content -->
+		</div>
+	</body>
+</html>

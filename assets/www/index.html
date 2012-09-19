@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Spender</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script type="text/javascript" charset="utf-8" src="cordova-2.0.0.js"></script>
+		<link rel="stylesheet" href="themes/jquery.mobile-1.1.1.css" />
+    <script type="text/javascript" src="currency.js"></script>
+  	<script src="jquery.min.js"></script> 
+  	<script src="jquery.mobile-1.1.1.js"></script>
+  	<script type="text/javascript">
+  			var html5rocks = {};
+  			html5rocks.webdb = {};
+
+  			html5rocks.webdb.db = null;
+
+  			html5rocks.webdb.open = function() {
+  				var dbSize = 5 * 1024 * 1024; // Son 5MB, obvio.
+  				html5rocks.webdb.db = openDatabase("cash", "1.0", "Cash Manager", dbSize);
+  			}
+
+  			html5rocks.webdb.onError = function(tx, e) {
+  				alert("Ocurrio un error: " + e.message);
+  			}
+
+  			html5rocks.webdb.onSuccess = function(tx, r) {
+  				html5rocks.webdb.getAllItems();
+  			}
+
+  			html5rocks.webdb.createTable = function() {
+  				var db = html5rocks.webdb.db;
+  				db.transaction(function(tx) {
+  					tx.executeSql("CREATE TABLE IF NOT EXISTS cash (id INTEGER PRIMARY KEY ASC, usuario VARCHAR(50), total LONG)", []);
+  					tx.executeSql("CREATE TABLE IF NOT EXISTS tipos (id INTEGER PRIMARY KEY ASC, descripcion VARCHAR(50))", []);
+  					tx.executeSql("CREATE TABLE IF NOT EXISTS salidas (id INTEGER PRIMARY KEY ASC, tipo INTEGER, monto LONG, fecha TEXT)", []);
+  					tx.executeSql("CREATE TABLE IF NOT EXISTS entradas (id INTEGER PRIMARY KEY ASC, tipo INTEGER, monto LONG, fecha TEXT)", []);
+            tx.executeSql("INSERT INTO cash (id, usuario, total) VALUES (1, 'Unknow', 0)", []);
+            tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (1, 'Comida')", []);
+            tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (2, 'Transporte')", []);
+            tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (3, 'Bebida')", []);
+            tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (4, 'Materiales')", []);
+            tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (5, 'Ocio')", []);
+  					tx.executeSql("INSERT INTO tipos (id, descripcion) VALUES (6, 'Servicio')", []);
+  				});
+  			}
+
+        html5rocks.webdb.getAllItems = function() {
+          var db = html5rocks.webdb.db;
+          db.transaction(function(tx) {
+            tx.executeSql("SELECT * FROM cash LIMIT 1", [], loadItems, html5rocks.webdb.onError);
+          });
+        }
+
+        function loadItems(tx, rs) {
+          var Items = document.getElementById("items");
+          Items.innerHTML = '<h4>Nombre: </h4><h3>' + rs.rows.item(0).usuario + '</h3><h4>Dinero Total: </h4><h1>$ ' + currency(rs.rows.item(0).total, 2, '.') + '</h1>';
+
+        }
+
+        function init() {
+          html5rocks.webdb.open();
+          html5rocks.webdb.createTable();
+          html5rocks.webdb.getAllItems();
+        }
+
+  		</script>
+	</head>
+	<body onLoad="init();">
+		<div data-role="page">
+			<div data-role="header" data-id="head1" data-position="fixed">
+				<h1>Total</h1>
+				<a href="options.html" data-role="button" data-icon="gear" data-transition="slidedown" data-ajax="false">Opciones</a>
+			</div>
+			<div data-role="content">	
+        <div id="items" style="text-align:center;"></div>
+			</div><!-- /content -->
+			<div data-role="footer" data-id="head2" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a href="index.html" data-icon="home" data-ajax="false">Total</a></li>
+						<li><a href="spend.html" data-icon="minus" data-ajax="false">Gasto</a></li>
+						<li><a href="in.html" data-icon="plus" data-ajax="false">Ingreso</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
